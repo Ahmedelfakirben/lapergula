@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   La Prégola — Animaciones GSAP + Web Audio API + Canvas
+   La Pergola — Animaciones GSAP + Web Audio API + Canvas
    Inspirado en: Harmonic Fusion (HF) — misma pila tecnológica
 ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -195,7 +195,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }, '-=0.2')
     .to($splashTitle, {
       duration: 0.8,
-      text: { value: 'La Prégola', delimiter: '' },
+      text: { value: 'La Pergola', delimiter: '' },
       ease: 'none',
       onStart: () => { $splashTitle.classList.remove('done'); },
     }, '+=0.05')
