@@ -483,36 +483,51 @@ let lastZoom = 1;
 let lastPanX = 0;
 let lastPanY = 0;
 let lastTap = 0;
+let isPinching = false;
 
 function getDistance(touches) {
   return Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY);
 }
 
 function updateImgTransform(img, animate = false) {
-  if (animate) {
-    gsap.to(img, { scale: imgZoom, x: panX, y: panY, duration: 0.3, ease: 'power2.out' });
+  if (!img) return;
+  // Limitar el paneo para que la imagen no salga volando
+  if (imgZoom > 1) {
+    const maxPanX = (imgZoom - 1) * window.innerWidth / 2;
+    const maxPanY = (imgZoom - 1) * window.innerHeight / 2;
+    panX = Math.max(-maxPanX, Math.min(maxPanX, panX));
+    panY = Math.max(-maxPanY, Math.min(maxPanY, panY));
   } else {
-    gsap.set(img, { scale: imgZoom, x: panX, y: panY });
+    panX = 0; panY = 0;
+  }
+  
+  if (animate) {
+    gsap.to(img, { scale: imgZoom, x: panX, y: panY, duration: 0.3, ease: 'power2.out', transformOrigin: 'center center' });
+  } else {
+    gsap.set(img, { scale: imgZoom, x: panX, y: panY, transformOrigin: 'center center' });
   }
 }
 
 function resetZoom(img) {
   imgZoom = 1; panX = 0; panY = 0; lastZoom = 1; lastPanX = 0; lastPanY = 0;
+  isPinching = false;
   if (img) updateImgTransform(img, true);
 }
 
 $carouselWrap.addEventListener('touchstart', e => {
   const touches = e.touches;
+  const img = $carousel.children[currentPage]?.querySelector('img');
   
   if (touches.length === 2) {
-    isDragging = false; // Cancel swipe
+    e.preventDefault();
+    isDragging = false; 
+    isPinching = true;
     initialDist = getDistance(touches);
   } else if (touches.length === 1) {
-    // Double tap to zoom
+    // Double tap
     const now = Date.now();
     if (now - lastTap < 300) {
       e.preventDefault();
-      const img = $carousel.children[currentPage].querySelector('img');
       if (imgZoom > 1) {
         resetZoom(img);
       } else {
@@ -526,35 +541,38 @@ $carouselWrap.addEventListener('touchstart', e => {
 
     touchStartX = touches[0].clientX;
     touchStartY = touches[0].clientY;
-    isDragging  = true;
+    
+    // Si ya estamos haciendo zoom, registramos dónde empezamos a arrastrar para el paneo
+    if (imgZoom > 1) {
+      isDragging = false; // No es un swipe de carrusel
+    } else {
+      isDragging = true;  // Puede ser un swipe
+    }
   }
 }, { passive: false });
 
 $carouselWrap.addEventListener('touchmove', e => {
   const touches = e.touches;
-  const img = $carousel.children[currentPage].querySelector('img');
+  const img = $carousel.children[currentPage]?.querySelector('img');
 
   if (touches.length === 2) {
     e.preventDefault();
+    if (initialDist === 0) initialDist = getDistance(touches); // Fallback
     const currentDist = getDistance(touches);
     imgZoom = Math.max(1, Math.min(lastZoom * (currentDist / initialDist), 5));
     updateImgTransform(img);
-  } else if (touches.length === 1 && isDragging) {
+  } else if (touches.length === 1) {
     const dx = touches[0].clientX - touchStartX;
     const dy = touches[0].clientY - touchStartY;
     
     if (imgZoom > 1) {
+      // Estamos ampliados, un dedo mueve la foto (paneo)
       e.preventDefault();
       panX = lastPanX + dx;
       panY = lastPanY + dy;
-      
-      const maxPanX = (imgZoom - 1) * window.innerWidth / 2;
-      const maxPanY = (imgZoom - 1) * window.innerHeight / 2;
-      panX = Math.max(-maxPanX, Math.min(maxPanX, panX));
-      panY = Math.max(-maxPanY, Math.min(maxPanY, panY));
-      
       updateImgTransform(img);
-    } else {
+    } else if (isDragging) {
+      // Tamaño normal, un dedo hace swipe de carrusel
       if (Math.abs(dx) > Math.abs(dy) + 5) {
         e.preventDefault();
         updateCarouselPosition(false, dx * 0.6);
@@ -565,16 +583,25 @@ $carouselWrap.addEventListener('touchmove', e => {
 
 $carouselWrap.addEventListener('touchend', e => {
   if (e.touches.length < 2) {
-    lastZoom = imgZoom;
+    if (isPinching) {
+      lastZoom = imgZoom;
+      isPinching = false;
+      // Actualizamos los "últimos" puntos de paneo por si acaso
+      lastPanX = panX;
+      lastPanY = panY;
+    }
   }
   
   if (imgZoom > 1) {
-    lastPanX = panX;
-    lastPanY = panY;
-    isDragging = false;
+    // Al soltar el dedo en modo zoom, guardamos la posición
+    if (e.touches.length === 0) {
+      lastPanX = panX;
+      lastPanY = panY;
+    }
     return;
   }
 
+  // Si llegamos aquí y no hay zoom, es el final de un swipe de carrusel
   if (!isDragging || e.touches.length > 0) return;
   isDragging = false;
   
