@@ -306,10 +306,11 @@ img, svg { display: block; max-width: 100%; }
 ══════════════════════════════════════════════════════════════════════════ */
 #landing {
   background: transparent;
-  padding: 2rem 1.5rem;
+  padding: 0 1.5rem;
   overflow-y: auto;
   overflow-x: hidden;
   justify-content: flex-start;
+  -webkit-overflow-scrolling: touch; /* Suavidad en iOS */
 }
 
 /* Ornamentos SVG */
@@ -325,7 +326,8 @@ img, svg { display: block; max-width: 100%; }
 
 /* Contenido central */
 .landing-content {
-  margin: auto 0; /* Auto margin for vertical centering when scrolling is possible */
+  margin: 0 auto; /* Alineado arriba por defecto para móviles */
+  padding: 2rem 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -333,6 +335,13 @@ img, svg { display: block; max-width: 100%; }
   width: 100%;
   max-width: 540px;
   z-index: 1;
+}
+
+@media (min-height: 850px) {
+  .landing-content {
+    margin: auto 0; /* Centrado vertical solo si hay altura suficiente */
+    padding: 0;
+  }
 }
 
 /* ── Logo ── */
