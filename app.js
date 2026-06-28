@@ -350,7 +350,7 @@ function buildCarousel(menu) {
   $thumbBar.innerHTML = '';
 
   menu.pages.forEach((filename, idx) => {
-    const src = encodeURI(`${menu.folder}/${filename}`);
+    const src = encodeURI(`${menu.folder}/${filename}`) + '?v=2.0';
 
     const page = document.createElement('div');
     page.className = 'carousel-page';
