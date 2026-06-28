@@ -684,7 +684,7 @@ img, svg { display: block; max-width: 100%; }
   display: flex;
   align-items: center;
   justify-content: center;
-  touch-action: pan-y;
+  touch-action: none; /* Requerido para zoom gestual nativo */
 }
 .carousel {
   display: flex;
@@ -716,6 +716,8 @@ img, svg { display: block; max-width: 100%; }
   object-fit: contain;
   border-radius: 0;
   box-shadow: none;
+  transform-origin: 0 0; /* Para el cálculo de zoom */
+  will-change: transform;
 }
 
 /* Botones de navegación */

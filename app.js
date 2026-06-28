@@ -395,6 +395,9 @@ function goToPage(index, animate = true) {
     p.setAttribute('aria-hidden', i !== index)
   );
 
+  const currentImg = $carousel.children[currentPage]?.querySelector('img');
+  if (typeof resetZoom === 'function') resetZoom(currentImg);
+
   currentPage = index;
   updateCarouselPosition(animate);
   updateNavButtons();
@@ -470,33 +473,118 @@ function scrollThumbIntoView(index) {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   8. SWIPE TÁCTIL
+   8. SWIPE TÁCTIL Y ZOOM (PINCH-TO-ZOOM)
 ══════════════════════════════════════════════════════════════════════════ */
+let imgZoom = 1;
+let panX = 0;
+let panY = 0;
+let initialDist = 0;
+let lastZoom = 1;
+let lastPanX = 0;
+let lastPanY = 0;
+let lastTap = 0;
+
+function getDistance(touches) {
+  return Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY);
+}
+
+function updateImgTransform(img, animate = false) {
+  if (animate) {
+    gsap.to(img, { scale: imgZoom, x: panX, y: panY, duration: 0.3, ease: 'power2.out' });
+  } else {
+    gsap.set(img, { scale: imgZoom, x: panX, y: panY });
+  }
+}
+
+function resetZoom(img) {
+  imgZoom = 1; panX = 0; panY = 0; lastZoom = 1; lastPanX = 0; lastPanY = 0;
+  if (img) updateImgTransform(img, true);
+}
+
 $carouselWrap.addEventListener('touchstart', e => {
-  touchStartX = e.touches[0].clientX;
-  touchStartY = e.touches[0].clientY;
-  isDragging  = true;
-}, { passive: true });
+  const touches = e.touches;
+  
+  if (touches.length === 2) {
+    isDragging = false; // Cancel swipe
+    initialDist = getDistance(touches);
+  } else if (touches.length === 1) {
+    // Double tap to zoom
+    const now = Date.now();
+    if (now - lastTap < 300) {
+      e.preventDefault();
+      const img = $carousel.children[currentPage].querySelector('img');
+      if (imgZoom > 1) {
+        resetZoom(img);
+      } else {
+        imgZoom = 2.5;
+        updateImgTransform(img, true);
+        lastZoom = 2.5;
+      }
+      return;
+    }
+    lastTap = now;
+
+    touchStartX = touches[0].clientX;
+    touchStartY = touches[0].clientY;
+    isDragging  = true;
+  }
+}, { passive: false });
 
 $carouselWrap.addEventListener('touchmove', e => {
-  if (!isDragging) return;
-  const dx = e.touches[0].clientX - touchStartX;
-  const dy = Math.abs(e.touches[0].clientY - touchStartY);
-  if (Math.abs(dx) > dy + 10) {
+  const touches = e.touches;
+  const img = $carousel.children[currentPage].querySelector('img');
+
+  if (touches.length === 2) {
     e.preventDefault();
-    updateCarouselPosition(false, dx * 0.6);
+    const currentDist = getDistance(touches);
+    imgZoom = Math.max(1, Math.min(lastZoom * (currentDist / initialDist), 5));
+    updateImgTransform(img);
+  } else if (touches.length === 1 && isDragging) {
+    const dx = touches[0].clientX - touchStartX;
+    const dy = touches[0].clientY - touchStartY;
+    
+    if (imgZoom > 1) {
+      e.preventDefault();
+      panX = lastPanX + dx;
+      panY = lastPanY + dy;
+      
+      const maxPanX = (imgZoom - 1) * window.innerWidth / 2;
+      const maxPanY = (imgZoom - 1) * window.innerHeight / 2;
+      panX = Math.max(-maxPanX, Math.min(maxPanX, panX));
+      panY = Math.max(-maxPanY, Math.min(maxPanY, panY));
+      
+      updateImgTransform(img);
+    } else {
+      if (Math.abs(dx) > Math.abs(dy) + 5) {
+        e.preventDefault();
+        updateCarouselPosition(false, dx * 0.6);
+      }
+    }
   }
 }, { passive: false });
 
 $carouselWrap.addEventListener('touchend', e => {
-  if (!isDragging) return;
+  if (e.touches.length < 2) {
+    lastZoom = imgZoom;
+  }
+  
+  if (imgZoom > 1) {
+    lastPanX = panX;
+    lastPanY = panY;
+    isDragging = false;
+    return;
+  }
+
+  if (!isDragging || e.touches.length > 0) return;
   isDragging = false;
+  
   const dx  = e.changedTouches[0].clientX - touchStartX;
   const thr = window.innerWidth * 0.22;
+  
   if (dx < -thr)     nextPage();
   else if (dx > thr) prevPage();
   else               updateCarouselPosition(true);
-}, { passive: true });
+}, { passive: false });
 
 /* ══════════════════════════════════════════════════════════════════════════
    9. TECLADO
