@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Code QR du menu numérique de La Prégola" />
+  <title>La Prégola — Code QR</title>
+  
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%232B2D39'/><text x='50' y='72' font-family='Georgia, serif' font-size='60' font-style='italic' font-weight='bold' fill='%23EFDF9C' text-anchor='middle'>P</text></svg>" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+  <!-- Librería QR sin dependencias externas -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    /* ── Variables ── */
+    :root {
+      --c-dark:  #2B2D39;
+      --c-teal:  #019FA2;
+      --c-gold:  #EFDF9C;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--c-dark);
+      color: #fff;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.5rem;
+    }
+
+    /* ── Pantalla principal ── */
+    .qr-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2rem;
+      width: 100%;
+      max-width: 440px;
+    }
+
+    /* Header */
+    .qr-header {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .qr-sup {
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--c-teal);
+    }
+
+    .qr-brand {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(2rem, 7vw, 3rem);
+      font-weight: 700;
+      color: var(--c-gold);
+      font-style: italic;
+      text-shadow: 0 2px 20px rgba(239,223,156,0.25);
+    }
+
+    .qr-divider {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      width: 180px;
+      margin: 0.25rem 0;
+    }
+    .divider-line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--c-teal), transparent);
+    }
+    .divider-gem { color: var(--c-teal); font-size: 0.5rem; }
+
+    /* Tarjeta del QR */
+    .qr-card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 1.75rem;
+      box-shadow: 0 0 0 6px rgba(1,159,162,0.15), 0 12px 48px rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .qr-card-top {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--c-dark);
+    }
+
+    #qr-code {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 220px;
+      height: 220px;
+    }
+
+    #qr-code img,
+    #qr-code canvas {
+      border-radius: 8px;
+    }
+
+    .qr-card-url {
+      font-size: 0.72rem;
+      color: var(--c-teal);
+      letter-spacing: 0.04em;
+      word-break: break-all;
+      text-align: center;
+      font-weight: 500;
+    }
+
+    /* Instrucción */
+    .qr-instruction {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      text-align: center;
+    }
+
+    .qr-instruction .icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(1,159,162,0.12);
+      border: 1px solid rgba(1,159,162,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--c-teal);
+    }
+
+    .qr-instruction .icon svg {
+      width: 18px; height: 18px;
+    }
+
+    .qr-instruction p {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.5);
+      line-height: 1.5;
+    }
+
+    .qr-instruction strong {
+      color: rgba(255,255,255,0.75);
+      font-weight: 500;
+    }
+
+    /* Botones de acción */
+    .qr-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      width: 100%;
+    }
+
+    .btn-primary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 0.9rem 1.5rem;
+      background: var(--c-teal);
+      color: #fff;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 0.875rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      transition: background 150ms, transform 150ms;
+      text-decoration: none;
+    }
+    .btn-primary:hover { background: #018c8f; transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0) scale(0.98); }
+    .btn-primary svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+    .btn-secondary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 0.8rem 1.5rem;
+      background: transparent;
+      color: rgba(255,255,255,0.6);
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 0.82rem;
+      font-weight: 400;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.1);
+      cursor: pointer;
+      transition: background 150ms, color 150ms;
+      text-decoration: none;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.05); color: #fff; }
+    .btn-secondary svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+    /* Botones Sociales */
+    .social-share {
+      display: flex;
+      gap: 1rem;
+      width: 100%;
+      justify-content: center;
+      margin: 0.5rem 0;
+    }
+
+    .social-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #fff;
+      cursor: pointer;
+      transition: transform 150ms, background 150ms;
+      text-decoration: none;
+    }
+    .social-btn svg {
+      width: 24px;
+      height: 24px;
+    }
+    .social-btn:hover {
+      transform: translateY(-2px);
+    }
+    
+    .btn-fb:hover { background: #1877F2; border-color: #1877F2; }
+    .btn-wa:hover { background: #25D366; border-color: #25D366; }
+    .btn-ig:hover {
+      background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
+      border-color: transparent;
+    }
+
+    /* ── Print styles ── */
+    @media print {
+      body {
+        background: #fff !important;
+        color: #000 !important;
+        padding: 0;
+        min-height: unset;
+      }
+      .qr-actions, .social-share, .qr-instruction { display: none !important; }
+      .qr-screen { gap: 1rem; }
+      .qr-brand { color: #2B2D39 !important; }
+      .qr-sup   { color: #019FA2 !important; }
+      .qr-card  { box-shadow: none; border: 2px solid #2B2D39; }
+      .qr-divider .divider-line { background: #019FA2; }
+      .qr-divider .divider-gem  { color: #019FA2; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="qr-screen">
+    <!-- Encabezado -->
+    <div class="qr-header">
+      <span class="qr-sup">Restaurant</span>
+      <h1 class="qr-brand">La Prégola</h1>
+      <div class="qr-divider">
+        <span class="divider-line"></span>
+        <span class="divider-gem">◆</span>
+        <span class="divider-line"></span>
+      </div>
+    </div>
+
+    <!-- Tarjeta QR -->
+    <div class="qr-card" id="print-area">
+      <p class="qr-card-top">Menu Numérique</p>
+      <div id="qr-code"></div>
+      <p class="qr-card-url" id="display-url"></p>
+    </div>
+
+    <!-- Instrucción -->
+    <div class="qr-instruction">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/>
+          <path d="M12 8v4l3 3"/>
+        </svg>
+      </div>
+      <p>Scannez avec l'appareil photo de votre mobile<br/><strong>sans aucune application nécessaire</strong></p>
+    </div>
+
+    <!-- Botones Sociales -->
+    <div class="social-share">
+      <a href="https://wa.me/?text=Découvrez%20notre%20menu:%20https://lapergolacabo.com" target="_blank" class="social-btn btn-wa" aria-label="Partager sur WhatsApp">
+        <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.888-.788-1.487-1.761-1.66-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51h-.57c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+        </svg>
+      </a>
+      <a href="https://www.facebook.com/sharer/sharer.php?u=https://lapergolacabo.com" target="_blank" class="social-btn btn-fb" aria-label="Partager sur Facebook">
+        <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+        </svg>
+      </a>
+      <a href="https://instagram.com/lapergolacabo" target="_blank" class="social-btn btn-ig" aria-label="Visiter notre Instagram">
+        <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm3.98-10.405a1.44 1.44 0 11-2.88 0 1.44 1.44 0 012.88 0z"/>
+        </svg>
+      </a>
+    </div>
+
+    <!-- Acciones -->
+    <div class="qr-actions">
+      <button class="btn-primary" onclick="window.print()" id="btn-print">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" xmlns="http://www.w3.org/2000/svg">
+          <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+          <rect x="6" y="14" width="12" height="8"/>
+        </svg>
+        Imprimer / Enregistrer en PDF
+      </button>
+      <a href="index.html" class="btn-secondary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" xmlns="http://www.w3.org/2000/svg">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+        Retour au menu
+      </a>
+    </div>
+  </div>
+
+  <script>
+    const DEFAULT_URL = 'https://lapergolacabo.com';
+    let qrInstance = null;
+
+    function generateQR() {
+      const container = document.getElementById('qr-code');
+      container.innerHTML = '';
+      document.getElementById('display-url').textContent = DEFAULT_URL;
+
+      qrInstance = new QRCode(container, {
+        text:          DEFAULT_URL,
+        width:         220,
+        height:        220,
+        colorDark:     '#2B2D39',
+        colorLight:    '#ffffff',
+        correctLevel:  QRCode.CorrectLevel.H,
+      });
+    }
+
+    // Generar QR inicial al cargar
+    window.addEventListener('DOMContentLoaded', () => {
+      generateQR();
+    });
+  </script>
+
+</body>
+</html>
