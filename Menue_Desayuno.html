@@ -106,11 +106,13 @@
             justify-content: center;
             border-radius: 50%;
             transition: all 0.3s ease;
+            opacity: 0.4;
         }
 
         .nav-arrow:hover:not(:disabled) {
             background: rgba(239, 223, 156, 0.15);
             transform: scale(1.1);
+            opacity: 1;
         }
 
         .nav-arrow:disabled {
@@ -697,6 +699,13 @@
             oldPage.classList.add('animating');
             newPage.classList.add('animating');
             newPage.classList.add('active'); // Activa la nueva
+
+            // EVITAR PARPADEO (FOUC):
+            // Ocultamos los elementos de la nueva página si no han sido inicializados
+            if (pageIndex > 0 && !window.menuScrollTriggersInitialized) {
+                const itemsToHide = newPage.querySelectorAll('.menu-item, .item-desc, h1');
+                gsap.set(itemsToHide, { opacity: 0 });
+            }
 
             const tl = gsap.timeline({
                 onComplete: () => {
