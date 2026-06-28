@@ -307,7 +307,9 @@ img, svg { display: block; max-width: 100%; }
 #landing {
   background: transparent;
   padding: 2rem 1.5rem;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  justify-content: flex-start;
 }
 
 /* Ornamentos SVG */
@@ -323,6 +325,7 @@ img, svg { display: block; max-width: 100%; }
 
 /* Contenido central */
 .landing-content {
+  margin: auto 0; /* Auto margin for vertical centering when scrolling is possible */
   display: flex;
   flex-direction: column;
   align-items: center;
