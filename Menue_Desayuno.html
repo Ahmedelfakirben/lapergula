@@ -703,7 +703,7 @@
             // EVITAR PARPADEO (FOUC):
             // Ocultamos los elementos de la nueva página si no han sido inicializados
             if (pageIndex > 0 && !window.menuScrollTriggersInitialized) {
-                const itemsToHide = newPage.querySelectorAll('.menu-item, .item-desc, h1');
+                const itemsToHide = newPage.querySelectorAll('.menu-item, .drink-item, .extras-box, h1');
                 gsap.set(itemsToHide, { opacity: 0 });
             }
 
