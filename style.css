@@ -138,9 +138,9 @@ img, svg { display: block; max-width: 100%; }
   transform: translate(-50%, -50%);
   animation: radar-pulse 3s ease-out infinite;
 }
-.r1 { width: 200px; height: 200px; animation-delay: 0s; }
-.r2 { width: 360px; height: 360px; animation-delay: 0.8s; }
-.r3 { width: 540px; height: 540px; animation-delay: 1.6s; }
+.r1 { width: 280px; height: 280px; animation-delay: 0s; }
+.r2 { width: 440px; height: 440px; animation-delay: 0.8s; }
+.r3 { width: 640px; height: 640px; animation-delay: 1.6s; }
 
 @keyframes radar-pulse {
   0%   { opacity: 0.6; transform: translate(-50%,-50%) scale(0.9); }
@@ -150,8 +150,8 @@ img, svg { display: block; max-width: 100%; }
 /* Ornamento SVG del splash */
 .splash-ornament {
   position: absolute;
-  width: min(320px, 80vw);
-  height: min(320px, 80vw);
+  width: min(440px, 92vw);
+  height: min(440px, 92vw);
   top: 50%; left: 50%;
   transform: translate(-50%, -50%);
   z-index: 0;
@@ -164,9 +164,9 @@ img, svg { display: block; max-width: 100%; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.8rem;
+  gap: 1.2rem;
   text-align: center;
-  padding: 2rem;
+  padding: 3rem;
 }
 
 .splash-pre {
@@ -229,13 +229,13 @@ img, svg { display: block; max-width: 100%; }
 
 /* Barra de carga */
 .splash-loader {
-  margin-top: 1.5rem;
+  margin-top: 2.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.8rem;
   opacity: 0;
-  width: 200px;
+  width: 240px;
 }
 .loader-bar {
   width: 100%;

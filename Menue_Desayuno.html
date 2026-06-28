@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Pérgola - Menu Digital</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Parisienne&family=Roboto+Slab:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- GSAP for 3D Animations & ScrollTrigger -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <!-- Lenis for smooth scroll -->
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.29/bundled/lenis.min.js"></script>
+    
+    <style>
+        :root {
+            --bg-dark: #272a35;
+            --text-teal: #23a79d;
+            --accent-yellow: #f4d068;
+            --text-light: #8fa4a1;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* --- (LOADER ELIMINADO POR PETICIÓN) --- */
+
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-teal);
+            font-family: 'Roboto Slab', serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* --- CABECERA DE NAVEGACIÓN (HEADER ELEGANTE) --- */
+        #app-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(39, 42, 53, 0.5);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            z-index: 100;
+        }
+
+        .btn-retour {
+            position: absolute;
+            left: 15px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background 0.3s ease;
+        }
+
+        .btn-retour:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .page-navigation {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .current-page-title {
+            color: var(--text-light);
+            font-family: 'Roboto Slab', serif;
+            font-size: 1.05rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            min-width: 190px;
+            text-align: center;
+            white-space: nowrap;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-arrow {
+            background: transparent;
+            border: none;
+            color: var(--accent-yellow);
+            cursor: pointer;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .nav-arrow:hover:not(:disabled) {
+            background: rgba(239, 223, 156, 0.15);
+            transform: scale(1.1);
+        }
+
+        .nav-arrow:disabled {
+            color: rgba(255, 255, 255, 0.2);
+            cursor: default;
+            transform: none !important;
+        }
+
+        /* --- FLECHAS LATERALES FLOTANTES --- */
+        .side-nav {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .side-nav.left {
+            left: 5px;
+        }
+        .side-nav.right {
+            right: 5px;
+        }
+        
+        @media (min-width: 768px) {
+            .side-nav.left { left: 20px; }
+            .side-nav.right { right: 20px; }
+            .nav-arrow svg { width: 40px; height: 40px; }
+        }
+
+        /* --- CONTENEDOR PRINCIPAL DE PÁGINAS (CÁMARA 3D) --- */
+        .main-content {
+            margin-top: 60px;
+            flex: 1;
+            display: grid;
+            grid-template-areas: "stack";
+            justify-items: center; /* Centra horizontalmente */
+            align-items: start; /* Pega arriba */
+            width: 100%;
+            perspective: 2000px; /* Para efecto 3D */
+        }
+
+        /* --- ESTILO BASE PARA CADA PÁGINA (SVG SÍMIL) --- */
+        .menu-page {
+            grid-area: stack; /* Todos se apilan en la misma celda de grid */
+            width: 100%;
+            max-width: 650px;
+            padding: 40px 24px 100px 24px;
+            text-align: center;
+            
+            /* Ocultos del flujo por defecto */
+            display: none;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            
+            /* Preparar para 3D Flip */
+            transform-style: preserve-3d;
+            backface-visibility: hidden;
+            transform-origin: left center; /* Eje de rotación en el lado izquierdo */
+            background-color: transparent;
+            backdrop-filter: none;
+            box-shadow: none;
+            z-index: 1;
+        }
+
+        /* Animación activa al cambiar de pestaña */
+        .menu-page.active {
+            display: block; /* Vuelve al flujo normal, dando altura al body */
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            z-index: 5;
+        }
+
+        /* Clase temporal durante el giro 3D para mantener ambos visibles */
+        .menu-page.animating {
+            display: block;
+            pointer-events: none;
+        }
+
+        /* --- TIPOGRAFÍAS Y DISEÑO DE TEXTOS DE LOS SVGS --- */
+        .section-header {
+            font-family: 'Roboto Slab', serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            letter-spacing: 0.5px;
+        }
+
+        h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+        }
+
+        h2 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin: 35px 0 25px 0;
+            letter-spacing: 2px;
+        }
+
+        h3 {
+            font-family: 'Roboto Slab', serif;
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-top: 30px;
+            margin-bottom: 10px;
+            color: var(--text-teal);
+        }
+
+        .item-group {
+            margin-bottom: 25px;
+        }
+
+        .menu-item {
+            font-family: 'Roboto Slab', serif;
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin: 12px 0;
+            letter-spacing: 0.5px;
+            transition: transform 0.2s;
+        }
+
+        .menu-item:hover {
+            transform: scale(1.03);
+        }
+
+        .item-desc {
+            font-family: 'Roboto Slab', serif;
+            font-size: 0.85rem;
+            color: var(--text-light);
+            font-weight: 400;
+            max-width: 85%;
+            margin: -6px auto 12px auto;
+            line-height: 1.3;
+        }
+
+        .logo-signature {
+            font-family: 'Parisienne', cursive;
+            font-size: 4rem;
+            font-weight: 400;
+            margin-top: 60px;
+            margin-bottom: 20px;
+        }
+
+        /* --- MARCAS DE AGUA DE FONDO EXCLUSIVAS POR PÁGINA --- */
+        .watermark-bg {
+            position: absolute;
+            top: 55%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 380px;
+            height: auto;
+            opacity: 0.05;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* --- PORTADA ESPECÍFICA (PÁGINA 1) --- */
+        .hero-page {
+            background: transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            max-width: 100%;
+            min-height: 80vh;
+        }
+
+        .hero-page .brand-box {
+            text-align: center;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .brand-box h1 {
+            font-family: 'Parisienne', cursive;
+            font-size: 5.5rem;
+            color: var(--accent-yellow);
+            margin-bottom: -15px;
+            font-weight: 400;
+            text-shadow: 0 0 20px rgba(244, 208, 104, 0.4);
+            line-height: 1;
+        }
+
+        .brand-box h2 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.5rem;
+            letter-spacing: 8px;
+            color: var(--text-light);
+            font-weight: 600;
+        }
+
+        /* --- ESTILOS ESPECÍFICOS DEL MENÚ DE DESAYUNO --- */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        @media (max-width: 850px) {
+            .menu-grid { grid-template-columns: 1fr; gap: 30px; }
+        }
+
+        .extras-box {
+            border: 2px solid var(--text-teal);
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 40px 0;
+            background-color: rgba(39, 42, 53, 0.5); /* Glassmorphism */
+        }
+
+        .extras-header {
+            background-color: var(--text-teal);
+            color: var(--bg-dark);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            text-align: center;
+            padding: 5px 0;
+            letter-spacing: 10px;
+            text-indent: 10px;
+        }
+
+        .extras-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            padding: 20px 15px;
+            text-align: center;
+        }
+
+        .extra-item {
+            font-family: 'Roboto Slab', serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .extra-desc {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-light);
+            margin-top: 4px;
+        }
+
+        .drinks-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .drink-item {
+            font-family: 'Roboto Slab', serif;
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .coffee-illustration {
+            width: 180px;
+            height: auto;
+            display: block;
+            margin: -20px auto 20px auto;
+            opacity: 0.9;
+        }
+
+        /* Para evitar que la página de menú colapse y se pueda hacer scroll */
+        .menu-page.scrollable {
+            max-width: 1000px; /* Más ancho para las dos columnas */
+        }
+
+        /* --- CLASES PARA ANIMACIÓN INTRO --- */
+        .mask-container {
+            overflow: hidden;
+            display: inline-block;
+            padding-bottom: 10px; /* Para que colas de letras no se corten */
+            margin-bottom: -25px; /* Compensa el padding */
+        }
+
+        .anim-title {
+            transform: translateY(100%); /* Oculto abajo */
+            opacity: 0;
+        }
+
+        .anim-subtitle {
+            opacity: 0;
+            letter-spacing: 0px; /* Inicialmente cerrado */
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+
+        /* --- BORDE INFERIOR DE OLAS REPETITIVO --- */
+        .footer-pattern {
+            width: 100%;
+            height: 40px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 30' width='60' height='30'%3E%3Cpath d='M0 15 Q 15 15 15 5 A 5 5 0 0 1 25 5 Q 25 15 40 15 T 60 15' fill='none' stroke='%2323a79d' stroke-width='2' stroke-linecap='round'/%3E%3Cline x1='0' y1='23' x2='60' y2='23' stroke='%2323a79d' stroke-width='1'/%3E%3Cline x1='0' y1='27' x2='60' y2='27' stroke='%2323a79d' stroke-width='4'/%3E%3C/svg%3E");
+            background-repeat: repeat-x;
+            background-position: bottom;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+        }
+
+        /* Configuración Grid para secciones extensas en pantallas de escritorio */
+        @media (min-width: 768px) {
+            .menu-columns {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 30px;
+                text-align: center;
+            }
+            .full-width-heading {
+                grid-column: span 2;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         FONDO ANIMADO (PARTÍCULAS Y BRILLOS)
+    ══════════════════════════════════════════════════════════════════ -->
+    <canvas id="particle-canvas" aria-hidden="true" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2; pointer-events: none;"></canvas>
+    
+    <div class="glow-bg" aria-hidden="true" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; overflow: hidden;">
+        <div class="glow-orb orb-1" style="position: absolute; top: -10%; left: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(1,159,162,0.15) 0%, transparent 70%); border-radius: 50%; filter: blur(40px);"></div>
+        <div class="glow-orb orb-2" style="position: absolute; bottom: -20%; right: -10%; width: 60vw; height: 60vw; background: radial-gradient(circle, rgba(239,223,156,0.1) 0%, transparent 70%); border-radius: 50%; filter: blur(50px);"></div>
+        <div class="glow-orb orb-3" style="position: absolute; top: 40%; left: 30%; width: 40vw; height: 40vw; background: radial-gradient(circle, rgba(1,159,162,0.08) 0%, transparent 70%); border-radius: 50%; filter: blur(60px);"></div>
+    </div>
+
+    <header id="app-header">
+        <button class="btn-retour" onclick="window.location.href='index.html'" aria-label="Retour à l'accueil">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-yellow)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+        </button>
+        <div class="page-navigation">
+            <div class="current-page-title" id="page-title-display">Acceuil</div>
+        </div>
+    </header>
+
+    <!-- Flechas Laterales Flotantes -->
+    <div class="side-nav left">
+        <button class="nav-arrow prev-arrow" onclick="prevPage()" aria-label="Page précédente" disabled>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+    </div>
+    <div class="side-nav right">
+        <button class="nav-arrow next-arrow" onclick="nextPage()" aria-label="Page suivante">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+    </div>
+
+    <div class="main-content">
+
+        <section class="menu-page hero-page active">
+            <div class="brand-box">
+                <div class="mask-container">
+                    <h1 class="anim-title" style="font-size: 4rem;">Petits Déjeuners</h1>
+                </div>
+                <div class="polaroid-wrapper anim-subtitle" style="margin-top: 45px; animation: float 5s ease-in-out infinite;">
+                    <img src="image/Fotoprimerapaginamenuedesayuno.png" alt="Breakfast" style="width: 260px; height: auto; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.6);">
+                </div>
+                <h2 class="anim-subtitle" style="margin-top: 30px; font-size: 1.2rem;">LA PÉRGOLA</h2>
+            </div>
+        </section>
+
+        <section class="menu-page scrollable">
+            <svg class="watermark-bg" viewBox="0 0 100 100" stroke="currentColor" fill="none" stroke-width="1.5"><path d="M10,50 Q40,20 85,50 Q40,80 10,50 Z M85,50 L95,40 L92,50 L95,60 Z M25,40 Q40,50 25,60 M65,48 A2,2 0 1,1 65,52 A2,2 0 1,1 65,48"/></svg>
+            
+            <div class="menu-grid">
+                <!-- COLUMNA IZQUIERDA -->
+                <div class="col-left">
+                    <div class="section-main-title" style="font-family: 'Montserrat', sans-serif; font-size: 3.5rem; font-weight: 800; line-height: 0.9; text-align: center; margin-bottom: 30px; letter-spacing: -1px;">BREAKFAST<br>TIME!</div>
+
+                    <div class="menu-item">
+                        <h3 style="font-family: 'Roboto Slab', serif; font-size: 1.25rem; font-weight: 800; margin-bottom: 8px; text-transform: uppercase;">EXPRESS - 40 DH</h3>
+                        <p class="item-desc" style="max-width: 90%;">Croissant aux œufs avec fromage et charcuterie, 1 boisson chaude au choix et un mini jus d'orange</p>
+                    </div>
+
+                    <div class="menu-item">
+                        <h3 style="font-family: 'Roboto Slab', serif; font-size: 1.25rem; font-weight: 800; margin-bottom: 8px; text-transform: uppercase;">BELDI - 45 DH</h3>
+                        <p class="item-desc" style="max-width: 90%;">Panier Marocain (Rghifa, Harcha, Malouia), 4 Coupelles (jben aux fine Herbes, beurre, amlou, miel), 1 Boisson chaude au choix et un Jus d'orange</p>
+                    </div>
+
+                    <div class="menu-item">
+                        <h3 style="font-family: 'Roboto Slab', serif; font-size: 1.25rem; font-weight: 800; margin-bottom: 8px; text-transform: uppercase;">Chamali - 48 dh</h3>
+                        <p class="item-desc" style="max-width: 90%;">2 œufs au plat servis avec charcuterie, fromage rouge salami, panier de pain, 2 couples (jben, olive), 1 boisson chaude au choix et un mini jus d'orange</p>
+                    </div>
+
+                    <div class="menu-item">
+                        <h3 style="font-family: 'Roboto Slab', serif; font-size: 1.25rem; font-weight: 800; margin-bottom: 8px; text-transform: uppercase;">Golden Banane Pancakes - 50 dh</h3>
+                        <p class="item-desc" style="max-width: 90%;">3 pancakes, banane, 3 couples (amlou, nutella, miel), 1 boisson chaude au choix, mini jus d'orange</p>
+                    </div>
+
+                    <div class="menu-item">
+                        <h3 style="font-family: 'Roboto Slab', serif; font-size: 1.25rem; font-weight: 800; margin-bottom: 8px; text-transform: uppercase;">Hollandaise - 50 dh</h3>
+                        <p class="item-desc" style="max-width: 90%;">Toast grillé tartinée au fromage, 2 œufs, charcuterie, fromage cheddar, 2 couples (jben, olive), 1 boisson chaude au choix y mini jus d'orange</p>
+                    </div>
+
+                    <div class="menu-item">
+                        <h3 style="font-family: 'Roboto Slab', serif; font-size: 1.25rem; font-weight: 800; margin-bottom: 8px; text-transform: uppercase;">Espagnol - 52 DH</h3>
+                        <p class="item-desc" style="max-width: 90%;">Pain grillé, 4 coupelles (thon, tomate à l'ail et huile d'olive, fromage manchego) tapenade (pate d'olive), 1 boisson chaude au choix et un mini jus d'orange</p>
+                    </div>
+
+                    <div class="menu-item">
+                        <h3 style="font-family: 'Roboto Slab', serif; font-size: 1.25rem; font-weight: 800; margin-bottom: 8px; text-transform: uppercase;">Fassi - 60 DH</h3>
+                        <p class="item-desc" style="max-width: 90%;">Tajine de khlie, panier de pain, coupelles d'olive, 1 boisson chaude au choix et un mini jus d'orange</p>
+                    </div>
+                </div>
+
+                <!-- COLUMNA DERECHA -->
+                <div class="col-right">
+                    
+                    <div class="menu-item" style="margin-top: 15px;">
+                        <h3 style="font-family: 'Roboto Slab', serif; font-size: 1.25rem; font-weight: 800; margin-bottom: 8px; text-transform: uppercase;">Américain - 60 DH</h3>
+                        <p class="item-desc" style="max-width: 90%;">Toast grillé, 2 œufs au plat, 2 saucisses grillé, tomate grillée, Champignon sauté, 1 boisson chaude au choix et un mini jus d'orange</p>
+                    </div>
+
+                    <div class="menu-item">
+                        <h3 style="font-family: 'Roboto Slab', serif; font-size: 1.25rem; font-weight: 800; margin-bottom: 8px; text-transform: uppercase;">Norvégiens - 62 DH</h3>
+                        <p class="item-desc" style="max-width: 90%;">Toast grillé tartinée au fromage, saumon fumé, œuf, avocat, 2 couples (sauce fromage, olive), 1 boisson chaude au choix et un mini jus d'orange</p>
+                    </div>
+
+                    <!-- Caja de EXTRAS -->
+                    <div class="extras-box">
+                        <div class="extras-header">EXTRAS</div>
+                        <div class="extras-content">
+                            <div>
+                                <div class="extra-item">Pain au chocolat / Croissant - 10 dh
+                                    <div class="extra-desc">Tartinage aux choix</div>
+                                </div>
+                                <div class="extra-item">Harcha / Rghifa / Malouia - 16 dh
+                                    <div class="extra-desc">Tartinage aux choix</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="extra-item">Omelette Nature - 18 dh</div>
+                                <div class="extra-item">Omelette Fromage - 24 dh</div>
+                                <div class="extra-item">Croque - 40 dh</div>
+                                <div class="extra-item">Suppléments - 5 dh</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bebidas Calientes -->
+                    <svg class="coffee-illustration" viewBox="0 0 100 80" fill="none" stroke="var(--text-teal)" stroke-width="1.5">
+                        <path d="M20,30 C20,60 80,60 80,30 Z"/>
+                        <ellipse cx="50" cy="30" rx="30" ry="8"/>
+                        <path d="M80,35 C95,35 95,50 75,50"/>
+                        <path d="M40,20 Q35,10 45,5 T35,-5 M55,20 Q60,10 50,5 T60,-5" stroke-dasharray="2,2"/>
+                        <path d="M10,65 Q30,55 50,65 Q70,75 40,80 Q10,75 10,65 Z"/>
+                        <path d="M20,60 Q35,68 30,75 M40,58 Q45,68 40,78 M60,65 Q55,70 50,75" stroke-width="1"/>
+                    </svg>
+
+                    <div class="section-main-title" style="font-family: 'Montserrat', sans-serif; font-size: 2.8rem; font-weight: 800; line-height: 0.9; text-align: center; margin-bottom: 30px; letter-spacing: -1px; margin-top: -10px;">NOS BOISSONS<br>CHAUDES</div>
+
+                    <div class="drinks-grid">
+                        <div>
+                            <div class="drink-item">Café Américain</div>
+                            <div class="drink-item">Café Crème</div>
+                            <div class="drink-item">Nescafé</div>
+                            <div class="drink-item">Cappuccino</div>
+                            <div class="drink-item">Expresso</div>
+                            <div class="drink-item">Double Espresso</div>
+                            <div class="drink-item">Lait Chaud ou Froid</div>
+                        </div>
+                        <div>
+                            <div class="drink-item">Colacao</div>
+                            <div class="drink-item">Thé à la Menthe</div>
+                            <div class="drink-item">Thé Noir</div>
+                            <div class="drink-item">Thé Spéciale</div>
+                            <div class="drink-item">Thé Américain</div>
+                            <div class="drink-item">Verveine</div>
+                            <div class="drink-item">Verveine au Lait</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="logo-signature">La Pérgola</div>
+            <div class="footer-pattern"></div>
+        </section>
+
+    </div>
+
+    <script>
+        let currentPageIndex = 0;
+
+        const pageTitles = [
+            "Acceuil", "Le Menu"
+        ];
+        const titleDisplay = document.getElementById('page-title-display');
+        const prevBtn = document.querySelector('.prev-arrow');
+        const nextBtn = document.querySelector('.next-arrow');
+
+        function updateHeaderUI(newIndex) {
+            prevBtn.disabled = newIndex === 0;
+            nextBtn.disabled = newIndex === pageTitles.length - 1;
+
+            gsap.to(titleDisplay, {
+                opacity: 0,
+                y: -10,
+                duration: 0.2,
+                onComplete: () => {
+                    titleDisplay.textContent = pageTitles[newIndex];
+                    gsap.to(titleDisplay, { opacity: 1, y: 0, duration: 0.2 });
+                }
+            });
+        }
+
+        function nextPage() {
+            if (currentPageIndex < pageTitles.length - 1) {
+                switchPage(currentPageIndex + 1);
+            }
+        }
+
+        function prevPage() {
+            if (currentPageIndex > 0) {
+                switchPage(currentPageIndex - 1);
+            }
+        }
+
+        /* --- CONTROL TÁCTIL (SWIPE) PARA MÓVILES --- */
+        let touchStartX = 0;
+        let touchEndX = 0;
+        
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        document.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, { passive: true });
+
+        function handleSwipe() {
+            const threshold = 50; // Distancia mínima para considerar un swipe
+            if (touchEndX < touchStartX - threshold) {
+                // Deslizamiento hacia la izquierda = Siguiente
+                nextPage();
+            }
+            if (touchEndX > touchStartX + threshold) {
+                // Deslizamiento hacia la derecha = Anterior
+                prevPage();
+            }
+        }
+
+        function switchPage(pageIndex) {
+            if (pageIndex === currentPageIndex) return;
+
+            const pages = document.querySelectorAll('.menu-page');
+            const appHeader = document.getElementById('app-header');
+
+            const oldPage = pages[currentPageIndex];
+            const newPage = pages[pageIndex];
+            const isForward = pageIndex > currentPageIndex;
+
+            updateHeaderUI(pageIndex);
+
+            // Subir al inicio de la página antes de girar
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Bloquear clicks durante animación
+            appHeader.style.pointerEvents = 'none';
+
+            // Marcamos ambas como 'animating' para forzar su display: block dentro del grid
+            oldPage.classList.add('animating');
+            newPage.classList.add('animating');
+            newPage.classList.add('active'); // Activa la nueva
+
+            const tl = gsap.timeline({
+                onComplete: () => {
+                    oldPage.classList.remove('active');
+                    oldPage.classList.remove('animating');
+                    newPage.classList.remove('animating');
+                    
+                    // Limpiar absolutamente todas las transformaciones inyectadas por GSAP
+                    gsap.set([oldPage, newPage], { clearProps: "all" });
+                    
+                    appHeader.style.pointerEvents = 'auto'; // Desbloquear clicks
+                    
+                    // Si llegamos al menú, inicializar ScrollTrigger
+                    if (currentPageIndex === 1 && !window.menuScrollTriggersInitialized && typeof initMenuScrollTriggers === 'function') {
+                        initMenuScrollTriggers();
+                        window.menuScrollTriggersInitialized = true;
+                    }
+                    ScrollTrigger.refresh(); // Refrescar animaciones al girar de página
+                }
+            });
+
+            if (isForward) {
+                // Paso hacia adelante
+                gsap.set(newPage, { rotationY: 0, opacity: 1, zIndex: 4 });
+                gsap.set(oldPage, { zIndex: 5 });
+                
+                tl.to(oldPage, { 
+                    rotationY: -100, 
+                    opacity: 0, 
+                    duration: 0.8, 
+                    ease: "power2.inOut",
+                    transformOrigin: "left center"
+                });
+            } else {
+                // Paso hacia atrás
+                gsap.set(newPage, { rotationY: -100, opacity: 0, zIndex: 6 });
+                gsap.set(oldPage, { zIndex: 5 });
+                
+                tl.to(newPage, { 
+                    rotationY: 0, 
+                    opacity: 1, 
+                    duration: 0.8, 
+                    ease: "power2.inOut",
+                    transformOrigin: "left center"
+                });
+            }
+
+            currentPageIndex = pageIndex;
+        }
+
+        /* ══════════════════════════════════════════════════════════════════════════
+           ANIMACIÓN DE MARCAS DE AGUA (LOS "DIBUJITOS" DEL FONDO)
+        ══════════════════════════════════════════════════════════════════════════ */
+        gsap.to('.watermark-bg', {
+            y: -15, // Flotar hacia arriba 15px
+            rotation: 2, // Girar muy levemente 2 grados
+            duration: 4, // Tarda 4 segundos en subir
+            ease: "sine.inOut",
+            yoyo: true, // Vuelve a bajar
+            repeat: -1 // Infinito
+        });
+
+        /* ══════════════════════════════════════════════════════════════════════════
+           FÍSICAS DE SCROLL (LENIS)
+        ══════════════════════════════════════════════════════════════════════════ */
+        const lenis = new Lenis({
+            duration: 1.2,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            direction: 'vertical',
+            gestureDirection: 'vertical',
+            smooth: true,
+            mouseMultiplier: 1,
+            smoothTouch: false,
+            touchMultiplier: 2,
+            infinite: false,
+        });
+
+        function raf(time) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+
+        /* ══════════════════════════════════════════════════════════════════════════
+           ANIMACIONES ULTRA-PREMIUM (HERO + SCROLLTRIGGER)
+        ══════════════════════════════════════════════════════════════════════════ */
+        gsap.registerPlugin(ScrollTrigger);
+
+        window.addEventListener('load', () => {
+            const tlLoader = gsap.timeline();
+
+            // 5. Impactos de Portada (Frenado en Seco Polaroid)
+            // Preparar polaroid antes de que entre
+            gsap.set('.polaroid-wrapper', { scale: 2.5, rotation: 15, y: -100, opacity: 0 });
+            gsap.set('.anim-title', { opacity: 0, scale: 0.8 });
+            gsap.set('.anim-subtitle:not(.polaroid-wrapper)', { letterSpacing: "40px", opacity: 0 }); // La Pergola subtitle
+
+            tlLoader.to('.polaroid-wrapper', {
+                scale: 1,
+                rotation: 0,
+                y: 0,
+                opacity: 1,
+                duration: 1.2,
+                ease: "power4.out"
+            });
+
+            tlLoader.to('.anim-title', {
+                opacity: 1,
+                scale: 1,
+                duration: 1.2,
+                ease: "back.out(1.7)"
+            }, "-=1.0");
+
+            // 6. Tensión de Espaciado "LA PÉRGOLA" (Subtitle)
+            tlLoader.to('.anim-subtitle:not(.polaroid-wrapper)', {
+                opacity: 1,
+                letterSpacing: "8px",
+                duration: 1.5,
+                ease: "back.out(1.7)"
+            }, "-=0.8");
+            
+            // Sincronizar Lenis con GSAP
+            gsap.ticker.add((time) => {
+                lenis.raf(time * 1000);
+            });
+            gsap.ticker.lagSmoothing(0);
+        });
+
+        // Función para inicializar los triggers cuando la página 2 sea visible
+        window.initMenuScrollTriggers = function() {
+            // --- ANIMACIONES ON-SCROLL (SCROLLTRIGGER) ---
+            
+            // Platos (Despliegue 3D en Cascada)
+            gsap.utils.toArray('.menu-item').forEach((item) => {
+                gsap.fromTo(item, 
+                    { opacity: 0, rotationX: -60, transformOrigin: "top center", y: 50 },
+                    { 
+                        opacity: 1, 
+                        rotationX: 0, 
+                        y: 0,
+                        duration: 1, 
+                        ease: "power3.out",
+                        scrollTrigger: {
+                            trigger: item,
+                            start: "top 85%", // Cuando el top del item llega al 85% de la pantalla
+                            toggleActions: "play none none reverse"
+                        }
+                    }
+                );
+            });
+
+            // Bebidas (Entrada Cruzada Lógica Matemática)
+            gsap.utils.toArray('.drink-item').forEach((drink, i) => {
+                const xOffset = i % 2 === 0 ? -50 : 50; // Par entra por izquierda, impar por derecha
+                gsap.fromTo(drink,
+                    { opacity: 0, x: xOffset },
+                    {
+                        opacity: 1,
+                        x: 0,
+                        duration: 1,
+                        ease: "power3.out",
+                        scrollTrigger: {
+                            trigger: drink,
+                            start: "top 90%",
+                            toggleActions: "play none none reverse"
+                        }
+                    }
+                );
+            });
+
+            // Rebotes Exagerados para Extras y Café
+            gsap.fromTo('.extras-box', 
+                { scale: 0.5, opacity: 0 },
+                {
+                    scale: 1,
+                    opacity: 1,
+                    duration: 1.5,
+                    ease: "elastic.out(1, 0.5)",
+                    scrollTrigger: {
+                        trigger: '.extras-box',
+                        start: "top 85%",
+                        toggleActions: "play none none reverse"
+                    }
+                }
+            );
+
+            gsap.fromTo('.coffee-illustration',
+                { scale: 0.5, opacity: 0, rotation: -20 },
+                {
+                    scale: 1,
+                    opacity: 1,
+                    rotation: 0,
+                    duration: 1.2,
+                    ease: "back.out(2)",
+                    scrollTrigger: {
+                        trigger: '.coffee-illustration',
+                        start: "top 85%",
+                        toggleActions: "play none none reverse"
+                    }
+                }
+            );
+        };
+
+        /* ══════════════════════════════════════════════════════════════════════════
+           CANVAS DE PARTÍCULAS DORADAS (Extraído de app.js)
+        ══════════════════════════════════════════════════════════════════════════ */
+        (function initParticles() {
+            const canvas = document.getElementById('particle-canvas');
+            const ctx    = canvas.getContext('2d');
+            let W, H, particles = [], mouse = { x: -999, y: -999 };
+
+            function resize() {
+                W = canvas.width  = window.innerWidth;
+                H = canvas.height = window.innerHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+            window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+
+            class Particle {
+                constructor() { this.reset(true); }
+                reset(init = false) {
+                    this.x    = Math.random() * W;
+                    this.y    = init ? Math.random() * H : H + 10;
+                    this.size = 0.8 + Math.random() * 2;
+                    this.speedY = 0.2 + Math.random() * 0.5;
+                    this.speedX = (Math.random() - 0.5) * 0.3;
+                    this.opacity = 0;
+                    this.maxOpacity = 0.3 + Math.random() * 0.4;
+                    // Alterna entre dorado y turquesa
+                    this.color = Math.random() > 0.5
+                        ? `rgba(239,223,156,${this.maxOpacity})`
+                        : `rgba(1,159,162,${this.maxOpacity * 0.7})`;
+                    this.life = 0;
+                    this.maxLife = 180 + Math.random() * 200;
+                }
+                update() {
+                    this.life++;
+                    if (this.life < 40) this.opacity = (this.life / 40) * this.maxOpacity;
+                    else if (this.life > this.maxLife - 40) this.opacity = ((this.maxLife - this.life) / 40) * this.maxOpacity;
+                    else this.opacity = this.maxOpacity;
+
+                    const dx = mouse.x - this.x, dy = mouse.y - this.y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist < 180) {
+                        this.x += (dx / dist) * 0.15;
+                        this.y += (dy / dist) * 0.15;
+                    }
+
+                    this.y -= this.speedY;
+                    this.x += this.speedX;
+                    if (this.life >= this.maxLife || this.y < -10) this.reset();
+                }
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color.replace(/[\d.]+\)$/, `${this.opacity})`);
+                    ctx.fill();
+                }
+            }
+
+            for (let i = 0; i < 80; i++) particles.push(new Particle());
+
+            function animate() {
+                ctx.clearRect(0, 0, W, H);
+                particles.forEach(p => { p.update(); p.draw(); });
+                requestAnimationFrame(animate);
+            }
+            animate();
+        })();
+    </script>
+</body>
+</html>
